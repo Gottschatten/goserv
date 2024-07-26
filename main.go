@@ -6,6 +6,10 @@ import (
 	"net/http"
 )
 
+type apiConfig struct {
+	fileserverHits int
+}
+
 func main() {
 
 	cfg := apiConfig{
@@ -28,6 +32,7 @@ func main() {
 	// API Endpoints /api
 	mux.HandleFunc("GET /api/healthz", healthzHandle)
 	mux.HandleFunc("/api/reset", cfg.resetHits)
+	mux.HandleFunc("POST /api/validate_chirp", cfg.validateChirp)
 
 	// Define Server adress and Handler
 	server := &http.Server{
@@ -37,25 +42,6 @@ func main() {
 
 	log.Printf("Serving ")
 	log.Fatal(server.ListenAndServe())
-}
-
-type apiConfig struct {
-	fileserverHits int
-}
-
-func (cfg *apiConfig) middlewareMetric(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		cfg.fileserverHits++
-		next.ServeHTTP(w, r)
-	})
-}
-
-func (cfg *apiConfig) resetHits(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Reset!"))
-	log.Printf("Resetting hits")
-	cfg.fileserverHits = 0
 }
 
 func (cfg *apiConfig) sendHits(w http.ResponseWriter, r *http.Request) {
@@ -78,4 +64,3 @@ func healthzHandle(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 	writer.Write([]byte("OK"))
 }
-
