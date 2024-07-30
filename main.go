@@ -32,7 +32,8 @@ func main() {
 	// API Endpoints /api
 	mux.HandleFunc("GET /api/healthz", healthzHandle)
 	mux.HandleFunc("/api/reset", cfg.resetHits)
-	mux.HandleFunc("POST /api/validate_chirp", cfg.validateChirp)
+	mux.HandleFunc("POST /api/validate_chirp", validateChirp)
+	// mux.HandleFunc("POST /api/chirp", postChirp)
 
 	// Define Server adress and Handler
 	server := &http.Server{
