@@ -24,3 +24,6 @@ go.work.sum
 database.json
 .direnv/
 tmp/
+./.direnv/
+./.envrc
+./.direnv/*
