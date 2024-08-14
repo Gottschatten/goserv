@@ -7,6 +7,7 @@
 *.dll
 *.so
 *.dylib
+*.nix
 
 # Test binary, built with `go test -c`
 *.test
@@ -24,6 +25,6 @@ go.work.sum
 database.json
 .direnv/
 tmp/
-./.direnv/
-./.envrc
-./.direnv/*
+.direnv/
+.envrc
+.direnv/*
