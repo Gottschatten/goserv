@@ -25,6 +25,18 @@ func (db *DB) postChirp(w http.ResponseWriter, r *http.Request) {
 	db.id++
 }
 
+func (db *DB) getChirp(w http.ResponseWriter, r *http.Request) {
+	chirpSet, err := db.GetChirps()
+	if err != nil {
+		log.Printf("Error getting Chirps: %s", err)
+		respondWithError(w, http.StatusInternalServerError, "Error getting chirp")
+		return
+	}
+	respondWithJson(w, http.StatusOK, chirpSet)
+	return
+
+}
+
 // validateChirp decodes request, than cleans & checks length, than calls response function
 
 func validateChirp(w http.ResponseWriter, r *http.Request, db *DB) {
