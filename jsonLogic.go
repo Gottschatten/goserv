@@ -7,19 +7,27 @@ import (
 	"strings"
 )
 
-type Chirp struct {
-	Body string `json:"body"`
+type chirpCount struct {
+	id int
 }
 
-type returnChirp struct {
-	CleanedBody string `json:"cleaned_body"`
+type Chirp struct {
+	Id   int    `json:"id"`
+	Body string `json:"body"`
 }
 
 type Invalid struct {
 	Error string `json:"error"`
 }
 
-func validateChirp(w http.ResponseWriter, r *http.Request) {
+func (db *DB) postChirp(w http.ResponseWriter, r *http.Request) {
+	validateChirp(w, r, db)
+	db.id++
+}
+
+// validateChirp decodes request, than cleans & checks length, than calls response function
+
+func validateChirp(w http.ResponseWriter, r *http.Request, db *DB) {
 	//
 	const chirplen = 140
 	var badWords = map[string]bool{
@@ -30,7 +38,10 @@ func validateChirp(w http.ResponseWriter, r *http.Request) {
 
 	//
 	decoder := json.NewDecoder(r.Body)
-	chirp := Chirp{}
+	chirp := Chirp{
+		Id:   db.id,
+		Body: "",
+	}
 	err := decoder.Decode(&chirp)
 	if err != nil {
 		log.Printf("Error decoding chirp: %s", err)
@@ -41,8 +52,16 @@ func validateChirp(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusBadRequest, "Chirp is too long")
 		return
 	}
-	cleaned := cleanChirp(chirp.Body, badWords)
-	respondWithJson(w, http.StatusOK, returnChirp{CleanedBody: cleaned})
+	chirp.Body = cleanChirp(chirp.Body, badWords)
+
+	_, err = db.CreateChirp(chirp)
+	if err != nil {
+		log.Printf("Error Creating and Saving Chirp: &", err)
+		respondWithError(w, http.StatusInternalServerError, "Database error")
+		return
+	}
+
+	respondWithJson(w, http.StatusCreated, chirp)
 	return
 }
 

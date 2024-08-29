@@ -8,10 +8,16 @@ import (
 func main() {
 	const dir = http.Dir(".")
 	const port = "8080"
+	const path = "./database.json"
 
 	//
 	cfg := apiConfig{
 		fileserverHits: 0,
+	}
+
+	db, err := NewDB(path)
+	if err != nil {
+		log.Printf("Error connecting DB: %s", err)
 	}
 
 	mux := http.NewServeMux()
@@ -23,7 +29,7 @@ func main() {
 	mux.HandleFunc("GET /api/healthz", healthz)
 	mux.HandleFunc("GET /admin/metrics", cfg.adminMetric)
 	mux.HandleFunc("/api/reset", cfg.resetMetrics)
-	mux.HandleFunc("POST /api/validate_chirp", validateChirp)
+	mux.HandleFunc("POST /api/chirps", db.postChirp)
 
 	// Server Config
 	app := http.Server{
