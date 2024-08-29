@@ -30,6 +30,7 @@ func main() {
 	mux.HandleFunc("GET /admin/metrics", cfg.adminMetric)
 	mux.HandleFunc("/api/reset", cfg.resetMetrics)
 	mux.HandleFunc("POST /api/chirps", db.postChirp)
+	mux.HandleFunc("GET /api/chirps", db.getChirp)
 
 	// Server Config
 	app := http.Server{
