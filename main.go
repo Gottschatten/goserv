@@ -37,5 +37,6 @@ func main() {
 		Addr:    ":" + port,
 		Handler: mux,
 	}
+	log.Printf("Listening on: localhost%s", app.Addr)
 	log.Fatal(app.ListenAndServe())
 }
