@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
+// TODO: Delete?
 type chirpCount struct {
 	id int
 }
@@ -33,6 +35,28 @@ func (db *DB) getChirp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	respondWithJson(w, http.StatusOK, chirpSet)
+	return
+
+}
+func (db *DB) getOneChirp(w http.ResponseWriter, r *http.Request) {
+	chirpId, err := strconv.Atoi(r.PathValue("chirpId"))
+	if err != nil {
+		log.Printf("Error converting ID: %s", err)
+		respondWithError(w, http.StatusInternalServerError, "Error convertig ID")
+		return
+	}
+	chirpSet, err := db.GetChirps()
+	if err != nil {
+		log.Printf("Error getting Chirps: %s", err)
+		respondWithError(w, http.StatusInternalServerError, "Error getting chirp")
+		return
+	}
+	if len(chirpSet) <= chirpId-1 {
+		log.Printf("ChirpID not in DB")
+		respondWithError(w, http.StatusNotFound, "ChirpId not found")
+		return
+	}
+	respondWithJson(w, http.StatusOK, chirpSet[chirpId-1])
 	return
 
 }

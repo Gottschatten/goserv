@@ -16,6 +16,7 @@ type DB struct {
 
 type DBStructure struct {
 	Chirps map[int]Chirp `json:"chirps"`
+	Users  map[int]Chirp `json:"users"`
 }
 
 func NewDB(path string) (*DB, error) {
@@ -106,9 +107,14 @@ func (db *DB) writeDB(dbs DBStructure) error {
 
 func (db *DB) ensureDB() error {
 	const chirpMap = `
-	{
-		"chirps": {}
-	}`
+	[
+		{
+			"chirps": {}
+		},
+		{
+			"user": {}
+		}
+	]`
 	_, err := os.ReadFile(db.path)
 	if err != nil {
 		err = os.WriteFile(db.path, []byte(chirpMap), 0666)

@@ -31,6 +31,7 @@ func main() {
 	mux.HandleFunc("/api/reset", cfg.resetMetrics)
 	mux.HandleFunc("POST /api/chirps", db.postChirp)
 	mux.HandleFunc("GET /api/chirps", db.getChirp)
+	mux.HandleFunc("GET /api/chirps/{chirpId}", db.getOneChirp)
 
 	// Server Config
 	app := http.Server{
