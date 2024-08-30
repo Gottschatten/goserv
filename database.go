@@ -16,7 +16,7 @@ type DB struct {
 
 type DBStructure struct {
 	Chirps map[int]Chirp `json:"chirps"`
-	Users  map[int]Chirp `json:"users"`
+	Users  map[int]User  `json:"users"`
 }
 
 func NewDB(path string) (*DB, error) {
@@ -25,6 +25,59 @@ func NewDB(path string) (*DB, error) {
 		mux:  &sync.RWMutex{},
 		id:   1,
 	}, nil
+}
+
+func (db *DB) CreateUser(user User) (User, error) {
+	err := db.ensureDB()
+	userSet, err := db.GetUsers()
+	if err != nil {
+		return User{}, err
+	}
+
+	userSet = append(userSet, user)
+
+	err = db.writeUsers(userSet)
+	if err != nil {
+		return User{}, err
+	}
+
+	return user, nil
+}
+
+func (db *DB) GetUsers() ([]User, error) {
+	dbs, err := db.loadDB()
+	if err != nil {
+		log.Printf("loadDB err")
+		return []User{}, err
+	}
+	userSet := []User{}
+	var keys = []int{}
+	for key := range dbs.Users {
+		keys = append(keys, key)
+	}
+	sort.Ints(keys)
+	for _, k := range keys {
+		userSet = append(userSet, dbs.Users[k])
+	}
+
+	return userSet, nil
+}
+
+func (db *DB) writeUsers(userSet []User) error {
+	userMap := make(map[int]User)
+	for _, user := range userSet {
+		userMap[user.Id] = user
+	}
+	dbs, err := db.loadDB()
+	if err != nil {
+		log.Printf("loadDb err")
+		return err
+	}
+	err = db.writeDB(DBStructure{Chirps: dbs.Chirps, Users: userMap})
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (db *DB) CreateChirp(chirp Chirp) (Chirp, error) {
@@ -68,7 +121,12 @@ func (db *DB) writeChirps(chirpSet []Chirp) error {
 	for _, chirp := range chirpSet {
 		chirpMap[chirp.Id] = chirp
 	}
-	err := db.writeDB(DBStructure{Chirps: chirpMap})
+	dbs, err := db.loadDB()
+	if err != nil {
+		log.Printf("loadDb err")
+		return err
+	}
+	err = db.writeDB(DBStructure{Chirps: chirpMap, Users: dbs.Users})
 	if err != nil {
 		return err
 	}
@@ -107,14 +165,12 @@ func (db *DB) writeDB(dbs DBStructure) error {
 
 func (db *DB) ensureDB() error {
 	const chirpMap = `
-	[
+	
 		{
-			"chirps": {}
-		},
-		{
-			"user": {}
+			"chirps": {},
+			"users": {}
 		}
-	]`
+	`
 	_, err := os.ReadFile(db.path)
 	if err != nil {
 		err = os.WriteFile(db.path, []byte(chirpMap), 0666)

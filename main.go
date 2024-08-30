@@ -32,6 +32,7 @@ func main() {
 	mux.HandleFunc("POST /api/chirps", db.postChirp)
 	mux.HandleFunc("GET /api/chirps", db.getChirp)
 	mux.HandleFunc("GET /api/chirps/{chirpId}", db.getOneChirp)
+	mux.HandleFunc("POST /api/users", db.postUser)
 
 	// Server Config
 	app := http.Server{
