@@ -7,6 +7,11 @@ import (
 )
 
 type User struct {
+	Id       int    `json:"id"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+type UserReturn struct {
 	Id    int    `json:"id"`
 	Email string `json:"email"`
 }
@@ -19,8 +24,9 @@ func (db *DB) postUser(w http.ResponseWriter, r *http.Request) {
 func validateUser(w http.ResponseWriter, r *http.Request, db *DB) {
 	decoder := json.NewDecoder(r.Body)
 	user := User{
-		Id:    db.id,
-		Email: "",
+		Id:       db.id,
+		Email:    "",
+		Password: "",
 	}
 	err := decoder.Decode(&user)
 	if err != nil {
@@ -28,13 +34,13 @@ func validateUser(w http.ResponseWriter, r *http.Request, db *DB) {
 		respondWithError(w, http.StatusInternalServerError, "Error decoding user")
 		return
 	}
-	_, err = db.CreateUser(user)
+	userR, err := db.CreateUser(user)
 	if err != nil {
 		log.Printf("Error Creating and Saving User: %s", err)
 		respondWithError(w, http.StatusInternalServerError, "Database Error")
 		return
 	}
-	respondWithJson(w, http.StatusCreated, user)
+	respondWithJson(w, http.StatusCreated, userR)
 	return
 }
 

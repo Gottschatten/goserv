@@ -27,21 +27,24 @@ func NewDB(path string) (*DB, error) {
 	}, nil
 }
 
-func (db *DB) CreateUser(user User) (User, error) {
+func (db *DB) CreateUser(user User) (UserReturn, error) {
 	err := db.ensureDB()
 	userSet, err := db.GetUsers()
 	if err != nil {
-		return User{}, err
+		return UserReturn{}, err
 	}
 
 	userSet = append(userSet, user)
 
 	err = db.writeUsers(userSet)
 	if err != nil {
-		return User{}, err
+		return UserReturn{}, err
 	}
-
-	return user, nil
+	var userR = UserReturn{
+		Id:    user.Id,
+		Email: user.Email,
+	}
+	return userR, nil
 }
 
 func (db *DB) GetUsers() ([]User, error) {
