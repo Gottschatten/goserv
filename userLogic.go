@@ -9,6 +9,7 @@ import (
 )
 
 var ErrNoUser = errors.New("User not found")
+var ErrWrongPassw = errors.New("Wrong Password!")
 
 type User struct {
 	Id       int    `json:"id"`
@@ -18,6 +19,34 @@ type User struct {
 type UserReturn struct {
 	Id    int    `json:"id"`
 	Email string `json:"email"`
+}
+
+func (db *DB) loginRequest(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
+	user := User{
+		Id:       -1,
+		Email:    "",
+		Password: "",
+	}
+	err := decoder.Decode(&user)
+	if err != nil {
+		log.Printf("Error decoding user: %s", err)
+		respondWithError(w, http.StatusInternalServerError, "Error decoding user")
+		return
+	}
+	userReturn, err := db.loginUser(user.Email, user.Password)
+	if err == ErrWrongPassw {
+		log.Printf("%s", err)
+		respondWithError(w, http.StatusUnauthorized, "Wrong Password")
+		return
+	}
+	if err != nil {
+		log.Printf("Error getting User: %s", err)
+		respondWithError(w, http.StatusInternalServerError, "Something went wrong")
+		return
+	}
+	respondWithJson(w, http.StatusOK, userReturn)
+	return
 }
 
 func (db *DB) postUser(w http.ResponseWriter, r *http.Request) {
@@ -74,6 +103,28 @@ func (db *DB) getUserByMail(email string) (User, error) {
 func (db *DB) validateMail(email string) (bool, error) {
 	_, err := db.getUserByMail(email)
 	if err == ErrNoUser {
+		return true, nil
+	}
+	return false, err
+}
+
+func (db *DB) loginUser(email, password string) (UserReturn, error) {
+	dbUser, err := db.getUserByMail(email)
+	if err != nil {
+		return UserReturn{}, err
+	}
+	check, err := checkHash(dbUser.Password, password)
+	if check {
+		return UserReturn{Id: dbUser.Id, Email: dbUser.Email}, nil
+	}
+	return UserReturn{}, ErrWrongPassw
+}
+
+func checkHash(hash, password string) (bool, error) {
+	bHash := []byte(hash)
+	bPassword := []byte(password)
+	err := bcrypt.CompareHashAndPassword(bHash, bPassword)
+	if err == nil {
 		return true, nil
 	}
 	return false, err
