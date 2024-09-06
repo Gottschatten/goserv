@@ -8,6 +8,7 @@ import (
 
 type apiConfig struct {
 	fileserverHits int
+	jwtSecret      string
 }
 
 func (cfg *apiConfig) mwMetricsInc(next http.Handler) http.Handler {
